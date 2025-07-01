@@ -126,10 +126,6 @@ const Dashboard = () => {
         {isMobile ? (
           /* Mobile Layout - Single Column */
           <div className="space-y-4">
-            <QuoteOfTheDay />
-            <EnhancedAchievementSystem />
-            <SmartTaskInput />
-            <VoiceTaskInput />
             <TaskOverview />
             <TaskSection
               title="Today's Tasks"
@@ -137,6 +133,8 @@ const Dashboard = () => {
               icon={Calendar}
               emptyMessage="No tasks scheduled for today"
             />
+            <SmartTaskInput />
+            <VoiceTaskInput />
             <TaskSection
               title="Upcoming Tasks"
               tasks={upcomingTasks}
@@ -149,43 +147,45 @@ const Dashboard = () => {
               icon={CheckCircle2}
               emptyMessage="No completed tasks yet"
             />
+            <QuoteOfTheDay />
+            <EnhancedAchievementSystem />
           </div>
         ) : (
           /* Desktop Layout - Three Columns */
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column */}
+            {/* Left Column - Priority Tasks */}
             <div className="space-y-6">
-              <QuoteOfTheDay />
-              <EnhancedAchievementSystem />
+              <TaskOverview />
               <TaskSection
                 title="Today's Tasks"
                 tasks={todayTasks}
                 icon={Calendar}
                 emptyMessage="No tasks scheduled for today"
               />
-            </div>
-
-            {/* Center Column */}
-            <div className="space-y-6">
-              <SmartTaskInput />
-              <VoiceTaskInput />
-              <TaskOverview />
-            </div>
-
-            {/* Right Column */}
-            <div className="space-y-6">
               <TaskSection
                 title="Upcoming Tasks"
                 tasks={upcomingTasks}
                 icon={Clock}
                 emptyMessage="No upcoming tasks"
               />
+            </div>
+
+            {/* Center Column - Task Input */}
+            <div className="space-y-6">
+              <SmartTaskInput />
+              <VoiceTaskInput />
               <TaskSection
                 title="Completed Tasks"
                 tasks={completedTasks}
                 icon={CheckCircle2}
                 emptyMessage="No completed tasks yet"
               />
+            </div>
+
+            {/* Right Column - Secondary Features */}
+            <div className="space-y-6">
+              <QuoteOfTheDay />
+              <EnhancedAchievementSystem />
             </div>
           </div>
         )}
