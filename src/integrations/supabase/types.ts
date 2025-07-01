@@ -9,6 +9,63 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          description: string | null
+          earned_at: string
+          id: string
+          points: number | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          description?: string | null
+          earned_at?: string
+          id?: string
+          points?: number | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          description?: string | null
+          earned_at?: string
+          id?: string
+          points?: number | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      categories: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       focus_sessions: {
         Row: {
           created_at: string
@@ -60,37 +117,169 @@ export type Database = {
         }
         Relationships: []
       }
+      subtasks: {
+        Row: {
+          completed: boolean | null
+          created_at: string
+          id: string
+          task_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string
+          id?: string
+          task_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string
+          id?: string
+          task_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subtasks_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_templates: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          priority: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          priority: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          priority?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_templates_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
+          actual_duration: number | null
+          ai_priority_score: number | null
+          category_id: string | null
           created_at: string
           description: string | null
           due_date: string | null
+          estimated_duration: number | null
           id: string
           priority: string
           status: string
+          tags: string[] | null
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          actual_duration?: number | null
+          ai_priority_score?: number | null
+          category_id?: string | null
           created_at?: string
           description?: string | null
           due_date?: string | null
+          estimated_duration?: number | null
           id?: string
           priority: string
           status: string
+          tags?: string[] | null
           title: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          actual_duration?: number | null
+          ai_priority_score?: number | null
+          category_id?: string | null
           created_at?: string
           description?: string | null
           due_date?: string | null
+          estimated_duration?: number | null
           id?: string
           priority?: string
           status?: string
+          tags?: string[] | null
           title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_stats: {
+        Row: {
+          completed_tasks: number | null
+          current_streak: number | null
+          id: string
+          longest_streak: number | null
+          total_points: number | null
+          total_tasks: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_tasks?: number | null
+          current_streak?: number | null
+          id?: string
+          longest_streak?: number | null
+          total_points?: number | null
+          total_tasks?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_tasks?: number | null
+          current_streak?: number | null
+          id?: string
+          longest_streak?: number | null
+          total_points?: number | null
+          total_tasks?: number | null
           updated_at?: string
           user_id?: string
         }

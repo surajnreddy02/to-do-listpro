@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, Phone, ArrowRight, Globe } from "lucide-react";
+import { Mail, Lock, ArrowRight, Globe, Zap, User } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -24,14 +24,12 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   
-  // Phone login states
-  const [phone, setPhone] = useState("");
-  const [verificationCode, setVerificationCode] = useState("");
-  const [isPhoneSubmitted, setIsPhoneSubmitted] = useState(false);
+  // Demo login states
+  const [demoName, setDemoName] = useState("");
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const { login, loginWithGoogle, loginWithPhone, verifyPhone } = useAuth();
+  const { login, loginWithGoogle, loginDemo } = useAuth();
   const { toast } = useToast();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
@@ -57,25 +55,21 @@ const Login = () => {
     }
   };
 
-  const handlePhoneLogin = async (e: React.FormEvent) => {
+  const handleDemoLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!demoName.trim()) {
+      setError("Please enter your name for the demo");
+      return;
+    }
+
     setError("");
     setIsSubmitting(true);
 
     try {
-      if (!isPhoneSubmitted) {
-        await loginWithPhone(phone);
-        setIsPhoneSubmitted(true);
-      } else {
-        await verifyPhone(phone, verificationCode);
-      }
+      await loginDemo(demoName.trim());
     } catch (err) {
-      console.error("Phone login error:", err);
-      setError(
-        err instanceof Error 
-          ? err.message 
-          : "Phone verification failed. Please try again."
-      );
+      console.error("Demo login error:", err);
+      setError("Demo login failed. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -103,17 +97,69 @@ const Login = () => {
       <div className="w-full max-w-md">
         <Card className="border-2 border-primary/20 shadow-xl">
           <CardHeader className="space-y-1 bg-gradient-to-r from-primary/10 to-transparent rounded-t-lg">
-            <CardTitle className="text-center text-2xl font-bold text-foreground">Login</CardTitle>
+            <CardTitle className="text-center text-2xl font-bold text-foreground">Welcome Back</CardTitle>
             <CardDescription className="text-center">
               Choose your preferred login method
             </CardDescription>
           </CardHeader>
           
-          <Tabs defaultValue="email" className="w-full">
+          <Tabs defaultValue="demo" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted/50">
-              <TabsTrigger value="email" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Email</TabsTrigger>
-              <TabsTrigger value="phone" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Phone</TabsTrigger>
+              <TabsTrigger value="demo" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Zap className="w-4 h-4 mr-1" />
+                Try Demo
+              </TabsTrigger>
+              <TabsTrigger value="email" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Mail className="w-4 h-4 mr-1" />
+                Email
+              </TabsTrigger>
             </TabsList>
+            
+            <TabsContent value="demo">
+              <form onSubmit={handleDemoLogin}>
+                <CardContent className="space-y-4">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mb-4">
+                    <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-2">
+                      <Zap className="w-5 h-5" />
+                      <span className="font-semibold">Demo Mode</span>
+                    </div>
+                    <p className="text-sm text-blue-600/80 dark:text-blue-400/80">
+                      Try our full-featured to-do app with sample data, AI features, and analytics. No account required!
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="demoName" className="flex items-center gap-2 text-foreground">
+                      <User className="h-4 w-4 text-primary" />
+                      Your Name
+                    </Label>
+                    <Input
+                      id="demoName"
+                      placeholder="Enter your name"
+                      value={demoName}
+                      onChange={(e) => setDemoName(e.target.value)}
+                      required
+                      className="border-primary/30 focus-visible:ring-primary"
+                    />
+                  </div>
+                  
+                  {error && (
+                    <div className="rounded-md bg-red-50 p-3 text-sm text-red-500 dark:bg-red-900/20 dark:text-red-300">
+                      {error}
+                    </div>
+                  )}
+                  
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Starting Demo..." : "Start Demo Experience"}
+                    <Zap className="ml-2 h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </form>
+            </TabsContent>
             
             <TabsContent value="email">
               <form onSubmit={handleEmailLogin}>
@@ -134,12 +180,10 @@ const Login = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="password" className="flex items-center gap-2 text-foreground">
-                        <Lock className="h-4 w-4 text-primary" />
-                        Password
-                      </Label>
-                    </div>
+                    <Label htmlFor="password" className="flex items-center gap-2 text-foreground">
+                      <Lock className="h-4 w-4 text-primary" />
+                      Password
+                    </Label>
                     <Input
                       id="password"
                       type="password"
@@ -165,73 +209,6 @@ const Login = () => {
                     {isSubmitting ? "Signing in..." : "Sign in"}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
-                </CardContent>
-              </form>
-            </TabsContent>
-            
-            <TabsContent value="phone">
-              <form onSubmit={handlePhoneLogin}>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="phone" className="flex items-center gap-2 text-foreground">
-                      <Phone className="h-4 w-4 text-primary" />
-                      Phone Number
-                    </Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="+1234567890"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      required
-                      disabled={isPhoneSubmitted}
-                      className="border-primary/30 focus-visible:ring-primary"
-                    />
-                  </div>
-                  
-                  {isPhoneSubmitted && (
-                    <div className="space-y-2">
-                      <Label htmlFor="code" className="text-foreground">Verification Code</Label>
-                      <Input
-                        id="code"
-                        type="text"
-                        placeholder="123456"
-                        value={verificationCode}
-                        onChange={(e) => setVerificationCode(e.target.value)}
-                        required
-                        className="border-primary/30 focus-visible:ring-primary"
-                      />
-                    </div>
-                  )}
-                  
-                  {error && (
-                    <div className="rounded-md bg-red-50 p-3 text-sm text-red-500 dark:bg-red-900/20 dark:text-red-300">
-                      {error}
-                    </div>
-                  )}
-                  
-                  <Button
-                    type="submit"
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting 
-                      ? "Processing..." 
-                      : isPhoneSubmitted 
-                        ? "Verify Code" 
-                        : "Send Code"}
-                  </Button>
-                  
-                  {isPhoneSubmitted && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full border-primary/30"
-                      onClick={() => setIsPhoneSubmitted(false)}
-                    >
-                      Change Phone Number
-                    </Button>
-                  )}
                 </CardContent>
               </form>
             </TabsContent>

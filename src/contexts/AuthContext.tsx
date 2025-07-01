@@ -1,25 +1,22 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-// Define the shape of our auth context
 interface AuthContextType {
   user: User | null;
   session: Session | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  isDemoUser: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
-  loginWithPhone: (phone: string) => Promise<void>;
-  verifyPhone: (phone: string, token: string) => Promise<void>;
-  logout: () => void;
-  isAuthenticated: boolean;
-  isLoading: boolean;
+  loginDemo: (name: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
-// Create the context with a default value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -28,280 +25,154 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
+  const [isDemoUser, setIsDemoUser] = useState(false);
   const { toast } = useToast();
 
-  // Set up Auth state listener and check for existing session
   useEffect(() => {
-    // First set up the auth state listener
+    // Check for demo user in localStorage
+    const demoUser = localStorage.getItem('demoUser');
+    if (demoUser) {
+      const demoData = JSON.parse(demoUser);
+      setUser({ id: 'demo-user-id', email: 'demo@example.com', ...demoData } as User);
+      setIsDemoUser(true);
+      setIsLoading(false);
+      return;
+    }
+
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        
-        if (event === 'SIGNED_IN') {
-          // Don't call Supabase directly in the callback
-          // Use setTimeout to avoid potential deadlocks
-          setTimeout(() => {
-            toast({
-              title: "Logged in successfully",
-              description: "Welcome to To-Do Pro+!",
-            });
-          }, 0);
-        }
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsDemoUser(false);
+        setIsLoading(false);
       }
     );
 
-    // Then check for existing session
-    const initializeAuth = async () => {
-      try {
-        setIsLoading(true);
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        setSession(initialSession);
-        setUser(initialSession?.user ?? null);
-      } catch (error) {
-        console.error("Error checking auth session:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initializeAuth();
-
-    // Cleanup subscription on unmount
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [toast]);
-
-  // Register function
-  const register = async (name: string, email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-          },
-          emailRedirectTo: `${window.location.origin}/login`,
-        },
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      // Store email for verification page
-      if (email) {
-        sessionStorage.setItem("pendingVerificationEmail", email);
-      }
-
-      // Create profile entry
-      if (data.user) {
-        try {
-          const { error: profileError } = await supabase
-            .from("profiles")
-            .insert({
-              id: data.user.id,
-              name,
-            });
-
-          if (profileError) {
-            console.error("Error creating profile:", profileError);
-          }
-        } catch (profileError) {
-          console.error("Error creating profile:", profileError);
-        }
-      }
-
-      toast({
-        title: "Registration successful",
-        description: "Please check your email to verify your account",
-      });
-      
-      navigate("/verify-email");
-    } catch (error: any) {
-      console.error("Registration failed", error);
-      toast({
-        title: "Registration failed",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
-      throw error;
-    } finally {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
       setIsLoading(false);
-    }
-  };
+    });
 
-  // Login with email and password
+    return () => subscription.unsubscribe();
+  }, []);
+
   const login = async (email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      if (error) {
-        // Handle specific error cases
-        if (error.message.includes("Invalid login credentials")) {
-          throw new Error("Invalid email or password. Please check your credentials and try again.");
-        } else if (error.message.includes("Email not confirmed")) {
-          throw new Error("Please verify your email before logging in.");
-        } else {
-          throw error;
-        }
-      }
-
-      navigate("/dashboard");
-    } catch (error: any) {
-      console.error("Login failed", error);
-      toast({
-        title: "Login failed",
-        description: error.message || "Please check your credentials and try again",
-        variant: "destructive",
-      });
+    if (error) {
       throw error;
-    } finally {
-      setIsLoading(false);
     }
+
+    toast({
+      title: "Login successful",
+      description: "Welcome back!",
+    });
   };
 
-  // Login with Google
+  const register = async (name: string, email: string, password: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { name },
+        emailRedirectTo: `${window.location.origin}/`,
+      },
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    toast({
+      title: "Registration successful",
+      description: "Please check your email to verify your account.",
+    });
+  };
+
   const loginWithGoogle = async () => {
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/`,
+      },
+    });
 
-      if (error) {
-        console.error("Google login error details:", error);
-        
-        // Check if it's a provider not enabled error
-        if (error.message.includes("provider is not enabled") || error.message.includes("Unsupported provider")) {
-          throw new Error("Google login is not enabled. Please ensure Google authentication is properly configured in your Supabase project settings.");
-        }
-        throw error;
-      }
-      
-      // No need to navigate as the OAuth redirect will handle this
-      
-    } catch (error: any) {
-      console.error("Google login failed", error);
-      toast({
-        title: "Google login failed",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
+    if (error) {
       throw error;
     }
   };
 
-  // Login with Phone
-  const loginWithPhone = async (phone: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        phone,
-      });
+  const loginDemo = async (name: string) => {
+    const demoUserData = {
+      id: 'demo-user-id',
+      email: 'demo@example.com',
+      name: name,
+      user_metadata: { name }
+    };
 
-      if (error) {
-        // Check if it's a provider not enabled error
-        if (error.message.includes("provider is not enabled") || error.message.includes("Unsupported phone provider")) {
-          throw new Error("Phone authentication is not enabled. Please contact the administrator to enable phone authentication.");
-        }
-        throw error;
-      }
+    localStorage.setItem('demoUser', JSON.stringify(demoUserData));
+    setUser(demoUserData as User);
+    setIsDemoUser(true);
 
-      toast({
-        title: "Verification code sent",
-        description: "Please check your phone for the verification code",
-      });
-    } catch (error: any) {
-      console.error("Phone login failed", error);
-      toast({
-        title: "Phone login failed",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
-      throw error;
-    }
+    // Create demo tasks
+    const demoTasks = [
+      { id: 'demo-1', title: 'Complete project proposal', description: 'Draft and finalize the Q1 project proposal', priority: 'high', status: 'in-progress', dueDate: '2025-01-10', createdAt: '2025-01-01' },
+      { id: 'demo-2', title: 'Review marketing materials', description: 'Go through the new marketing brochures', priority: 'medium', status: 'todo', dueDate: '2025-01-08', createdAt: '2025-01-01' },
+      { id: 'demo-3', title: 'Team meeting preparation', description: 'Prepare agenda and materials for weekly team meeting', priority: 'medium', status: 'todo', dueDate: '2025-01-07', createdAt: '2025-01-01' },
+      { id: 'demo-4', title: 'Update portfolio website', description: 'Add recent projects and update bio section', priority: 'low', status: 'todo', dueDate: null, createdAt: '2024-12-28' },
+      { id: 'demo-5', title: 'Learn React hooks', description: 'Complete advanced React hooks tutorial', priority: 'medium', status: 'completed', dueDate: '2024-12-30', createdAt: '2024-12-25' }
+    ];
+
+    localStorage.setItem('demoTasks', JSON.stringify(demoTasks));
+
+    toast({
+      title: "Demo mode activated",
+      description: `Welcome ${name}! You're now in demo mode with sample data.`,
+    });
   };
 
-  // Verify phone OTP
-  const verifyPhone = async (phone: string, token: string) => {
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        phone,
-        token,
-        type: "sms",
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      navigate("/dashboard");
-    } catch (error: any) {
-      console.error("Phone verification failed", error);
-      toast({
-        title: "Verification failed",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  // Logout function
   const logout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        throw error;
-      }
-      
+    if (isDemoUser) {
+      localStorage.removeItem('demoUser');
+      localStorage.removeItem('demoTasks');
       setUser(null);
-      setSession(null);
-      
-      toast({
-        title: "Logged out",
-        description: "You have been logged out successfully",
-      });
-      
-      navigate("/login");
-    } catch (error: any) {
-      console.error("Logout failed", error);
-      toast({
-        title: "Logout failed",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
+      setIsDemoUser(false);
+      return;
     }
+
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      throw error;
+    }
+
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out.",
+    });
   };
 
   const value = {
     user,
     session,
+    isAuthenticated: !!user,
+    isLoading,
+    isDemoUser,
     login,
     register,
     loginWithGoogle,
-    loginWithPhone,
-    verifyPhone,
+    loginDemo,
     logout,
-    isAuthenticated: !!user,
-    isLoading,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Custom hook to use the auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
