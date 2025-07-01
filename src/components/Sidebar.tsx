@@ -3,7 +3,9 @@ import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   LayoutDashboard,
   Timer,
@@ -12,8 +14,7 @@ import {
   Settings,
   LogOut,
   FileText,
-  PanelLeftClose,
-  PanelLeftOpen,
+  Menu,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -24,9 +25,9 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
   const { logout, user } = useAuth();
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
+  const isMobile = useIsMobile();
+  const [isOpen, setIsOpen] = useState(false);
 
-  // Get user's name from user metadata or use email as fallback
   const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
   const userInitial = userName.charAt(0).toUpperCase();
 
@@ -37,7 +38,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
       path: "/dashboard",
     },
     {
-      title: "Task Templates",
+      title: "Templates",
       icon: FileText,
       path: "/templates",
     },
@@ -63,36 +64,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
     },
   ];
 
-  return (
-    <div
-      className={cn(
-        "flex h-screen flex-col border-r bg-background transition-all duration-300",
-        collapsed ? "w-[80px]" : "w-[250px]",
-        className
-      )}
-    >
-      <div className="flex h-16 items-center justify-between px-4">
-        {!collapsed && (
-          <Link
-            to="/dashboard"
-            className="flex items-center gap-2 font-semibold text-lg text-primary"
-          >
-            To-Do Pro+
-          </Link>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="ml-auto"
-          onClick={() => setCollapsed(!collapsed)}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+  const SidebarContent = () => (
+    <div className="flex h-full flex-col">
+      <div className="flex h-16 items-center justify-center px-4">
+        <Link
+          to="/dashboard"
+          className="flex items-center gap-2 font-semibold text-lg text-primary"
+          onClick={() => setIsOpen(false)}
         >
-          {collapsed ? (
-            <PanelLeftOpen className="h-5 w-5" />
-          ) : (
-            <PanelLeftClose className="h-5 w-5" />
-          )}
-        </Button>
+          To-Do Pro+
+        </Link>
       </div>
 
       <Separator />
@@ -103,6 +84,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
             <li key={item.path}>
               <Link
                 to={item.path}
+                onClick={() => setIsOpen(false)}
                 className={cn(
                   "flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   location.pathname === item.path
@@ -110,8 +92,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
-                <item.icon className={cn("mr-2 h-5 w-5", collapsed && "mr-0")} />
-                {!collapsed && <span>{item.title}</span>}
+                <item.icon className="mr-2 h-5 w-5" />
+                <span>{item.title}</span>
               </Link>
             </li>
           ))}
@@ -119,7 +101,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
       </nav>
 
       <div className="mt-auto px-3 py-4">
-        {!collapsed && user && (
+        {user && (
           <div className="mb-4 flex items-center gap-3 overflow-hidden rounded-lg bg-accent p-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
               <span className="text-sm font-medium">
@@ -134,16 +116,46 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
         )}
         <Button
           variant="outline"
-          className={cn(
-            "flex w-full items-center justify-start",
-            collapsed && "justify-center"
-          )}
-          onClick={logout}
+          className="flex w-full items-center justify-start"
+          onClick={() => {
+            logout();
+            setIsOpen(false);
+          }}
         >
           <LogOut className="mr-2 h-4 w-4" />
-          {!collapsed && "Logout"}
+          Logout
         </Button>
       </div>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="fixed top-4 left-4 z-50 md:hidden"
+          >
+            <Menu className="h-6 w-6" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-[250px] p-0">
+          <SidebarContent />
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        "flex h-screen w-[250px] flex-col border-r bg-background",
+        className
+      )}
+    >
+      <SidebarContent />
     </div>
   );
 };

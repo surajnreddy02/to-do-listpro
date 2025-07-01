@@ -1,4 +1,5 @@
-import { format, isToday, isYesterday, isTomorrow, addDays, isSameDay } from "date-fns";
+
+import { format, isToday, isYesterday, isTomorrow, addDays, isSameDay, parse, isValid } from "date-fns";
 
 // Format a date as a relative day (Today, Tomorrow, Yesterday) or full date
 export const formatRelativeDate = (date: Date | string): string => {
@@ -68,4 +69,74 @@ export const getCurrentWeekDates = (): { start: Date; end: Date } => {
   end.setHours(23, 59, 59, 999);
   
   return { start, end };
+};
+
+// Parse date from natural language text
+export const parseNaturalDate = (text: string): Date | null => {
+  const today = new Date();
+  const lowerText = text.toLowerCase();
+
+  // Handle "today"
+  if (lowerText.includes('today')) {
+    return today;
+  }
+
+  // Handle "tomorrow"
+  if (lowerText.includes('tomorrow')) {
+    return addDays(today, 1);
+  }
+
+  // Handle "in X days" or "X days from now"
+  const daysMatch = lowerText.match(/(?:in\s+)?(\d+)\s+days?(?:\s+from\s+now)?/);
+  if (daysMatch) {
+    const days = parseInt(daysMatch[1]);
+    return addDays(today, days);
+  }
+
+  // Handle "next week"
+  if (lowerText.includes('next week')) {
+    return addDays(today, 7);
+  }
+
+  // Handle specific days of the week
+  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  for (let i = 0; i < dayNames.length; i++) {
+    if (lowerText.includes(dayNames[i])) {
+      const currentDay = today.getDay();
+      const targetDay = i;
+      let daysToAdd = targetDay - currentDay;
+      if (daysToAdd <= 0) {
+        daysToAdd += 7; // Next occurrence
+      }
+      return addDays(today, daysToAdd);
+    }
+  }
+
+  // Try to parse common date formats
+  const datePatterns = [
+    /(\d{1,2})\/(\d{1,2})\/(\d{4})/,  // MM/DD/YYYY
+    /(\d{1,2})-(\d{1,2})-(\d{4})/,   // MM-DD-YYYY
+    /(\d{4})-(\d{1,2})-(\d{1,2})/,   // YYYY-MM-DD
+  ];
+
+  for (const pattern of datePatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      let day, month, year;
+      if (pattern.source.startsWith('(\\d{4})')) {
+        // YYYY-MM-DD format
+        [, year, month, day] = match;
+      } else {
+        // MM/DD/YYYY or MM-DD-YYYY format
+        [, month, day, year] = match;
+      }
+      
+      const parsedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      if (isValid(parsedDate)) {
+        return parsedDate;
+      }
+    }
+  }
+
+  return null;
 };

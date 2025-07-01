@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,8 @@ import { Mic, MicOff, Loader2, Volume2 } from "lucide-react";
 import { useTask } from "@/contexts/TaskContext";
 import { geminiService } from "@/services/geminiService";
 import { useToast } from "@/hooks/use-toast";
+import { parseNaturalDate } from "@/lib/dateUtils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // TypeScript declarations for SpeechRecognition
 declare global {
@@ -59,6 +60,7 @@ const VoiceTaskInput = () => {
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const { addTask } = useTask();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -119,18 +121,23 @@ const VoiceTaskInput = () => {
     try {
       const smartTask = await geminiService.generateSmartTask(voiceText);
       
+      // Parse date from voice input
+      const parsedDate = parseNaturalDate(voiceText);
+      
       await addTask({
         title: smartTask.title,
         description: smartTask.description,
         priority: smartTask.priority as 'low' | 'medium' | 'high',
         status: "todo",
-        dueDate: null,
+        dueDate: parsedDate ? parsedDate.toISOString() : null,
         estimatedDuration: smartTask.estimatedDuration,
       });
 
       toast({
         title: "Voice Task Created",
-        description: `"${smartTask.title}" has been added from your voice input!`,
+        description: parsedDate 
+          ? `"${smartTask.title}" scheduled for ${parsedDate.toLocaleDateString()}!`
+          : `"${smartTask.title}" has been added from your voice input!`,
       });
 
       setTranscript("");
@@ -162,20 +169,20 @@ const VoiceTaskInput = () => {
   }
 
   return (
-    <Card className="mb-4 border-2 border-dashed border-primary/30">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2">
+    <Card className={`border-2 border-dashed border-primary/30 ${isMobile ? 'mb-4' : 'mb-4'}`}>
+      <CardHeader className={isMobile ? "pb-2" : "pb-3"}>
+        <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-base' : ''}`}>
           <Volume2 className="w-5 h-5" />
           Voice Task Input
-          <Badge variant="secondary">AI Powered</Badge>
+          <Badge variant="secondary" className={isMobile ? 'text-xs' : ''}>AI Powered</Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className={isMobile ? "p-3 pt-0" : ""}>
         <div className="text-center space-y-4">
           {transcript && (
-            <div className="p-3 bg-muted rounded-lg">
-              <p className="text-sm text-muted-foreground mb-1">You said:</p>
-              <p className="font-medium">"{transcript}"</p>
+            <div className={`p-3 bg-muted rounded-lg ${isMobile ? 'p-2' : ''}`}>
+              <p className={`text-muted-foreground mb-1 ${isMobile ? 'text-xs' : 'text-sm'}`}>You said:</p>
+              <p className={`font-medium ${isMobile ? 'text-sm' : ''}`}>"{transcript}"</p>
             </div>
           )}
 
@@ -183,12 +190,12 @@ const VoiceTaskInput = () => {
             <Button
               onClick={isListening ? stopListening : startListening}
               disabled={isProcessing}
-              size="lg"
+              size={isMobile ? "default" : "lg"}
               className={`gap-2 ${
                 isListening 
                   ? "bg-red-500 hover:bg-red-600 text-white" 
                   : "bg-primary hover:bg-primary/90"
-              }`}
+              } ${isMobile ? 'text-sm' : ''}`}
             >
               {isProcessing ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -206,7 +213,7 @@ const VoiceTaskInput = () => {
             </Button>
           </div>
 
-          <p className="text-xs text-muted-foreground">
+          <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-xs'}`}>
             {isListening 
               ? "Listening... Speak your task clearly" 
               : "Click to start recording your task description"

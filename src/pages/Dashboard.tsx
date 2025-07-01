@@ -5,46 +5,27 @@ import { TaskCard } from "@/components/TaskCard";
 import { TaskModal } from "@/components/TaskModal";
 import SmartTaskInput from "@/components/SmartTaskInput";
 import ProductivityStats from "@/components/ProductivityStats";
-import AchievementSystem from "@/components/AchievementSystem";
-import AdvancedTaskFilters from "@/components/AdvancedTaskFilters";
+import EnhancedAchievementSystem from "@/components/EnhancedAchievementSystem";
 import VoiceTaskInput from "@/components/VoiceTaskInput";
 import QuoteOfTheDay from "@/components/QuoteOfTheDay";
 import TaskOverview from "@/components/TaskOverview";
 import { Button } from "@/components/ui/button";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
-import {
-  Plus,
-  Filter,
-  CalendarDays,
-  CheckCircle2,
-  CircleSlash,
-  LayoutGrid,
-  Target
-} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Target, Calendar, CheckCircle2, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Dashboard = () => {
-  const { getTasksByFilter, updateTask, deleteTask } = useTask();
+  const { tasks, getTasksByFilter, updateTask, deleteTask } = useTask();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
-  const [currentFilter, setCurrentFilter] = useState<
-    "today" | "upcoming" | "completed" | "all"
-  >("today");
-  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
-  const baseTasks = getTasksByFilter(currentFilter);
-  const displayTasks = showAdvancedFilters ? filteredTasks : baseTasks;
+  const todayTasks = getTasksByFilter("today");
+  const upcomingTasks = getTasksByFilter("upcoming");
+  const completedTasks = getTasksByFilter("completed");
 
   const handleEditTask = (task: Task) => {
     setSelectedTask(task);
@@ -75,35 +56,64 @@ const Dashboard = () => {
     setIsModalOpen(true);
   };
 
-  const EmptyState = ({ title, description }: { title: string; description: string }) => (
-    <Card className="col-span-full">
-      <CardContent className="flex flex-col items-center justify-center py-10">
-        <CircleSlash className="mb-2 h-10 w-10 text-muted-foreground" />
-        <p className="text-lg font-medium">{title}</p>
-        <p className="text-sm text-muted-foreground mb-4">{description}</p>
-        <Button onClick={handleAddTask} className="gap-1">
-          <Plus className="h-4 w-4" />
-          Add Task
-        </Button>
+  const TaskSection = ({ title, tasks, icon: Icon, emptyMessage }: {
+    title: string;
+    tasks: Task[];
+    icon: any;
+    emptyMessage: string;
+  }) => (
+    <Card>
+      <CardHeader className={`flex flex-row items-center justify-between space-y-0 ${isMobile ? 'pb-2' : 'pb-4'}`}>
+        <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-base' : 'text-lg'}`}>
+          <Icon className="w-5 h-5 text-primary" />
+          {title}
+        </CardTitle>
+        <Badge variant="outline" className={isMobile ? 'text-xs' : ''}>
+          {tasks.length}
+        </Badge>
+      </CardHeader>
+      <CardContent className={isMobile ? "p-3 pt-0" : ""}>
+        <div className={`space-y-3 ${isMobile ? 'max-h-48' : 'max-h-64'} overflow-y-auto`}>
+          {tasks.length > 0 ? (
+            tasks.slice(0, isMobile ? 3 : 4).map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                onEdit={handleEditTask}
+                onDelete={handleDeleteTask}
+                onStatusChange={handleStatusChange}
+              />
+            ))
+          ) : (
+            <div className="text-center py-4">
+              <p className={`text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>{emptyMessage}</p>
+            </div>
+          )}
+          {tasks.length > (isMobile ? 3 : 4) && (
+            <p className={`text-center text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
+              +{tasks.length - (isMobile ? 3 : 4)} more tasks
+            </p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6 space-y-6">
+      <div className={`container mx-auto space-y-6 ${isMobile ? 'px-2 py-4' : 'px-4 py-6'}`}>
         {/* Header */}
         <div className="flex flex-col justify-between space-y-4 sm:flex-row sm:items-center sm:space-y-0">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-              <Target className="w-8 h-8 text-primary" />
+            <h1 className={`font-bold tracking-tight flex items-center gap-2 ${isMobile ? 'text-2xl' : 'text-3xl'}`}>
+              <Target className={`text-primary ${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`} />
               Dashboard
             </h1>
-            <p className="text-muted-foreground">
+            <p className={`text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>
               Manage your tasks and track your productivity
             </p>
           </div>
-          <Button onClick={handleAddTask} className="gap-1">
+          <Button onClick={handleAddTask} className={`gap-1 ${isMobile ? 'text-sm' : ''}`}>
             <Plus className="h-4 w-4" />
             Add Task
           </Button>
@@ -112,175 +122,73 @@ const Dashboard = () => {
         {/* Stats Section */}
         <ProductivityStats />
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column */}
+        {/* Main Content */}
+        {isMobile ? (
+          /* Mobile Layout - Single Column */
           <div className="space-y-4">
             <QuoteOfTheDay />
-            <AchievementSystem />
+            <EnhancedAchievementSystem />
+            <SmartTaskInput />
+            <VoiceTaskInput />
+            <TaskOverview />
+            <TaskSection
+              title="Today's Tasks"
+              tasks={todayTasks}
+              icon={Calendar}
+              emptyMessage="No tasks scheduled for today"
+            />
+            <TaskSection
+              title="Upcoming Tasks"
+              tasks={upcomingTasks}
+              icon={Clock}
+              emptyMessage="No upcoming tasks"
+            />
+            <TaskSection
+              title="Completed Tasks"
+              tasks={completedTasks}
+              icon={CheckCircle2}
+              emptyMessage="No completed tasks yet"
+            />
           </div>
+        ) : (
+          /* Desktop Layout - Three Columns */
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column */}
+            <div className="space-y-6">
+              <QuoteOfTheDay />
+              <EnhancedAchievementSystem />
+              <TaskSection
+                title="Today's Tasks"
+                tasks={todayTasks}
+                icon={Calendar}
+                emptyMessage="No tasks scheduled for today"
+              />
+            </div>
 
-          {/* Center Column */}
-          <div className="space-y-6">
-            {/* Task Input Methods */}
-            <div className="space-y-4">
+            {/* Center Column */}
+            <div className="space-y-6">
               <SmartTaskInput />
               <VoiceTaskInput />
+              <TaskOverview />
             </div>
 
-            {/* Task Overview */}
-            <TaskOverview />
-          </div>
-
-          {/* Right Column */}
-          <div className="space-y-6">
-            {/* Advanced Filters */}
-            <div className="flex items-center gap-2">
-              <Button
-                variant={showAdvancedFilters ? "default" : "outline"}
-                size="sm"
-                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                className="gap-2"
-              >
-                <Filter className="w-4 h-4" />
-                Filters
-              </Button>
-              {showAdvancedFilters && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setShowAdvancedFilters(false);
-                    setFilteredTasks([]);
-                  }}
-                >
-                  Clear
-                </Button>
-              )}
+            {/* Right Column */}
+            <div className="space-y-6">
+              <TaskSection
+                title="Upcoming Tasks"
+                tasks={upcomingTasks}
+                icon={Clock}
+                emptyMessage="No upcoming tasks"
+              />
+              <TaskSection
+                title="Completed Tasks"
+                tasks={completedTasks}
+                icon={CheckCircle2}
+                emptyMessage="No completed tasks yet"
+              />
             </div>
-
-            {showAdvancedFilters && (
-              <AdvancedTaskFilters onFiltersChange={setFilteredTasks} />
-            )}
-
-            {/* Task Tabs */}
-            <Tabs
-              defaultValue="today"
-              value={currentFilter}
-              onValueChange={(value) => {
-                setCurrentFilter(value as typeof currentFilter);
-                if (showAdvancedFilters) {
-                  setShowAdvancedFilters(false);
-                  setFilteredTasks([]);
-                }
-              }}
-              className="space-y-4"
-            >
-              <TabsList className="grid grid-cols-4 w-full">
-                <TabsTrigger value="today" className="gap-1">
-                  <CalendarDays className="h-4 w-4" />
-                  <span className="hidden sm:inline">Today</span>
-                </TabsTrigger>
-                <TabsTrigger value="upcoming" className="gap-1">
-                  <Filter className="h-4 w-4" />
-                  <span className="hidden sm:inline">Soon</span>
-                </TabsTrigger>
-                <TabsTrigger value="completed" className="gap-1">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <span className="hidden sm:inline">Done</span>
-                </TabsTrigger>
-                <TabsTrigger value="all" className="gap-1">
-                  <LayoutGrid className="h-4 w-4" />
-                  <span className="hidden sm:inline">All</span>
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="today" className="space-y-4">
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {displayTasks.length > 0 ? (
-                    displayTasks.map((task) => (
-                      <TaskCard
-                        key={task.id}
-                        task={task}
-                        onEdit={handleEditTask}
-                        onDelete={handleDeleteTask}
-                        onStatusChange={handleStatusChange}
-                      />
-                    ))
-                  ) : (
-                    <EmptyState 
-                      title="No tasks for today"
-                      description="Add a new task or set due dates to see your daily tasks"
-                    />
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="upcoming" className="space-y-4">
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {displayTasks.length > 0 ? (
-                    displayTasks.map((task) => (
-                      <TaskCard
-                        key={task.id}
-                        task={task}
-                        onEdit={handleEditTask}
-                        onDelete={handleDeleteTask}
-                        onStatusChange={handleStatusChange}
-                      />
-                    ))
-                  ) : (
-                    <EmptyState 
-                      title="No upcoming tasks"
-                      description="All caught up! Add a new task if needed."
-                    />
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="completed" className="space-y-4">
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {displayTasks.length > 0 ? (
-                    displayTasks.map((task) => (
-                      <TaskCard
-                        key={task.id}
-                        task={task}
-                        onEdit={handleEditTask}
-                        onDelete={handleDeleteTask}
-                        onStatusChange={handleStatusChange}
-                      />
-                    ))
-                  ) : (
-                    <EmptyState 
-                      title="No completed tasks"
-                      description="Complete some tasks to see them here"
-                    />
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="all" className="space-y-4">
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {displayTasks.length > 0 ? (
-                    displayTasks.map((task) => (
-                      <TaskCard
-                        key={task.id}
-                        task={task}
-                        onEdit={handleEditTask}
-                        onDelete={handleDeleteTask}
-                        onStatusChange={handleStatusChange}
-                      />
-                    ))
-                  ) : (
-                    <EmptyState 
-                      title="No tasks found"
-                      description="Add a new task to get started"
-                    />
-                  )}
-                </div>
-              </TabsContent>
-            </Tabs>
           </div>
-        </div>
+        )}
 
         <TaskModal
           open={isModalOpen}
