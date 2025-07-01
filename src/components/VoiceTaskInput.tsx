@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -118,11 +119,21 @@ const VoiceTaskInput = () => {
 
   const processVoiceInput = async (voiceText: string) => {
     setIsProcessing(true);
+    console.log('Processing voice input:', voiceText);
+    
     try {
+      // First, let AI analyze and understand the voice input
+      toast({
+        title: "Analyzing Voice Input",
+        description: "AI is processing and understanding your request...",
+      });
+
       const smartTask = await geminiService.generateSmartTask(voiceText);
+      console.log('Generated smart task:', smartTask);
       
       // Parse date from voice input
       const parsedDate = parseNaturalDate(voiceText);
+      console.log('Parsed date:', parsedDate);
       
       await addTask({
         title: smartTask.title,
@@ -134,10 +145,10 @@ const VoiceTaskInput = () => {
       });
 
       toast({
-        title: "Voice Task Created",
+        title: "Voice Task Created Successfully",
         description: parsedDate 
           ? `"${smartTask.title}" scheduled for ${parsedDate.toLocaleDateString()}!`
-          : `"${smartTask.title}" has been added from your voice input!`,
+          : `"${smartTask.title}" has been analyzed and added to your tasks!`,
       });
 
       setTranscript("");
@@ -145,7 +156,7 @@ const VoiceTaskInput = () => {
       console.error('Voice processing error:', error);
       toast({
         title: "Processing Failed",
-        description: "Could not create task from voice input. Please try again.",
+        description: "Could not analyze and create task from voice input. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -205,7 +216,7 @@ const VoiceTaskInput = () => {
                 <Mic className="w-5 h-5" />
               )}
               {isProcessing 
-                ? "Creating Task..." 
+                ? "Analyzing & Creating..." 
                 : isListening 
                   ? "Stop Listening" 
                   : "Start Voice Input"
@@ -216,7 +227,9 @@ const VoiceTaskInput = () => {
           <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-xs'}`}>
             {isListening 
               ? "Listening... Speak your task clearly" 
-              : "Click to start recording your task description"
+              : isProcessing
+                ? "AI is analyzing your voice input..."
+                : "Click to start recording. AI will analyze and create a proper task."
             }
           </p>
         </div>

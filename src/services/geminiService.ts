@@ -53,30 +53,63 @@ export class GeminiService {
 
   async generateSmartTask(description: string): Promise<{ title: string; description: string; priority: string; estimatedDuration: number }> {
     const prompt = `
-      Convert this task description into a structured task with title, description, priority (low/medium/high), and estimated duration in minutes.
+      Analyze this user input and convert it into a well-structured task. First understand what the user wants to accomplish, then create an appropriate task.
       
-      Input: "${description}"
+      User input: "${description}"
+      
+      Please:
+      1. Analyze the intent and context of what the user wants to do
+      2. Create a clear, actionable task title (concise but descriptive)
+      3. Provide a detailed description that breaks down what needs to be done
+      4. Determine appropriate priority based on urgency/importance indicators
+      5. Estimate realistic duration in minutes
+      
+      Consider these examples:
+      - "I need to buy groceries" → Title: "Buy Weekly Groceries", Description: "Purchase essential groceries including fresh produce, dairy, and household items"
+      - "Call mom tomorrow" → Title: "Call Mom", Description: "Have a catch-up phone call with mom to check in and share updates"
+      - "Finish the presentation for Monday meeting" → Title: "Complete Monday Presentation", Description: "Finalize slides, review content, and prepare talking points for Monday's team meeting"
       
       Return in this exact JSON format:
       {
-        "title": "Short task title",
-        "description": "Detailed description",
+        "title": "Clear, actionable task title",
+        "description": "Detailed description of what needs to be accomplished",
         "priority": "low|medium|high",
         "estimatedDuration": 30
       }
+      
+      Priority guidelines:
+      - High: Urgent deadlines, important meetings, critical tasks
+      - Medium: Important but not urgent, routine work tasks
+      - Low: Nice to have, personal tasks, long-term goals
     `;
 
     const response = await this.makeRequest(prompt);
     try {
-      return JSON.parse(response);
-    } catch {
+      const parsed = JSON.parse(response);
       return {
-        title: description.slice(0, 50),
+        title: parsed.title || description.slice(0, 50),
+        description: parsed.description || description,
+        priority: parsed.priority || 'medium',
+        estimatedDuration: parsed.estimatedDuration || 30
+      };
+    } catch {
+      // Fallback with better defaults
+      return {
+        title: this.generateFallbackTitle(description),
         description: description,
         priority: 'medium',
         estimatedDuration: 30
       };
     }
+  }
+
+  private generateFallbackTitle(description: string): string {
+    // Simple title generation from description
+    const words = description.split(' ');
+    if (words.length <= 6) {
+      return description.charAt(0).toUpperCase() + description.slice(1);
+    }
+    return words.slice(0, 6).join(' ') + '...';
   }
 
   async breakdownTask(taskTitle: string, taskDescription: string): Promise<string[]> {

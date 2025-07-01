@@ -23,20 +23,35 @@ const SmartTaskInput = () => {
     if (!input.trim()) return;
 
     setIsGenerating(true);
+    console.log('Generating smart task from input:', input);
+    
     try {
+      toast({
+        title: "Analyzing Input",
+        description: "AI is analyzing your input to create the perfect task...",
+      });
+
       const smartTask = await geminiService.generateSmartTask(input);
+      console.log('Generated smart task:', smartTask);
       
       // Parse date from input
       const parsedDate = parseNaturalDate(input);
+      console.log('Parsed date from input:', parsedDate);
       
       setSuggestions({
         ...smartTask,
         parsedDate
       });
-    } catch (error) {
+
       toast({
-        title: "AI Generation Failed",
-        description: "Could not generate smart task. Please try again.",
+        title: "Task Analysis Complete",
+        description: "Review the AI-generated task suggestions below!",
+      });
+    } catch (error) {
+      console.error('Smart task generation error:', error);
+      toast({
+        title: "AI Analysis Failed",
+        description: "Could not analyze and generate smart task. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -46,6 +61,8 @@ const SmartTaskInput = () => {
 
   const handleCreateTask = async () => {
     if (!suggestions) return;
+
+    console.log('Creating task with suggestions:', suggestions);
 
     await addTask({
       title: suggestions.title,
@@ -60,10 +77,10 @@ const SmartTaskInput = () => {
     setInput("");
     
     toast({
-      title: "Smart Task Created",
+      title: "Smart Task Created Successfully",
       description: suggestions.parsedDate 
         ? `Task scheduled for ${suggestions.parsedDate.toLocaleDateString()}!`
-        : "AI-powered task has been added to your list!",
+        : "AI-analyzed task has been added to your list!",
     });
   };
 
@@ -86,7 +103,7 @@ const SmartTaskInput = () => {
 
         <div className="space-y-3">
           <Textarea
-            placeholder="Describe what you need to do... (e.g., 'Prepare presentation for tomorrow's client meeting')"
+            placeholder="Describe what you need to do... (e.g., 'I need to prepare for tomorrow's client presentation' or 'Buy groceries this evening')"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             className={`resize-none ${isMobile ? 'min-h-[60px] text-sm' : 'min-h-[80px]'}`}
@@ -102,7 +119,7 @@ const SmartTaskInput = () => {
             ) : (
               <Sparkles className="w-4 h-4 mr-2" />
             )}
-            {isGenerating ? "Generating..." : "Generate Smart Task"}
+            {isGenerating ? "Analyzing & Generating..." : "Analyze & Generate Task"}
           </Button>
 
           {suggestions && (
@@ -110,7 +127,7 @@ const SmartTaskInput = () => {
               <CardContent className={isMobile ? "p-3" : "p-4"}>
                 <div className="flex items-center gap-2 mb-3">
                   <Lightbulb className="w-4 h-4 text-amber-500" />
-                  <span className={`font-medium ${isMobile ? 'text-sm' : ''}`}>AI Suggestions</span>
+                  <span className={`font-medium ${isMobile ? 'text-sm' : ''}`}>AI Analysis Results</span>
                 </div>
 
                 <div className="space-y-3">
