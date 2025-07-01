@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,7 +66,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({
   const { toast } = useToast();
   const { user, isAuthenticated, isDemoUser } = useAuth();
 
-  // Load demo data for demo users
+  // Load demo data for demo users - NO DUMMY DATA
   const loadDemoData = () => {
     const demoTasks = JSON.parse(localStorage.getItem('demoTasks') || '[]');
     const demoCategories = [
@@ -191,7 +190,10 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "tasks" },
-          () => fetchTasks()
+          (payload) => {
+            console.log('Real-time task update:', payload);
+            fetchTasks(); // Refresh all data when changes occur
+          }
         )
         .subscribe();
 
@@ -207,7 +209,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.setItem('demoTasks', JSON.stringify(updatedTasks));
   };
 
-  // Add a new task
+  // Add a new task - ENHANCED FOR REAL-TIME SYNC
   const addTask = async (task: Omit<Task, "id" | "createdAt" | "userId">) => {
     if (isDemoUser) {
       const newTask: Task = {
@@ -254,6 +256,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({
       if (data) {
         const newTask = transformTask(data);
         setTasks((prev) => [newTask, ...prev]);
+        console.log('Task added to local state:', newTask);
         toast({
           title: "Task added",
           description: "Your task has been added successfully",
@@ -269,7 +272,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // Update an existing task
+  // Update an existing task - ENHANCED FOR REAL-TIME SYNC
   const updateTask = async (id: string, taskData: Partial<Task>) => {
     if (isDemoUser) {
       const updatedTasks = tasks.map(task =>
@@ -313,12 +316,14 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (error) throw error;
 
-      // Update local state
+      // Update local state immediately for better UX
       setTasks((prev) =>
         prev.map((task) =>
           task.id === id ? { ...task, ...taskData } : task
         )
       );
+      
+      console.log('Task updated in local state:', { id, ...taskData });
       
       toast({
         title: "Task updated",
@@ -334,7 +339,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // Delete a task
+  // Delete a task - ENHANCED FOR REAL-TIME SYNC
   const deleteTask = async (id: string) => {
     if (isDemoUser) {
       const updatedTasks = tasks.filter(task => task.id !== id);
@@ -360,8 +365,10 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (error) throw error;
 
-      // Update local state
+      // Update local state immediately
       setTasks((prev) => prev.filter((task) => task.id !== id));
+      
+      console.log('Task deleted from local state:', id);
       
       toast({
         title: "Task deleted",
@@ -575,7 +582,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // Get tasks filtered by criteria
+  // Get tasks filtered by criteria - ENHANCED FILTERING
   const getTasksByFilter = (filter: "today" | "upcoming" | "completed" | "all") => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -590,7 +597,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({
         });
       case "upcoming":
         return tasks.filter((task) => {
-          if (!task.dueDate) return false;
+          if (!task.dueDate) return task.status !== "completed"; // Include tasks without due dates
           const taskDate = new Date(task.dueDate);
           taskDate.setHours(0, 0, 0, 0);
           return taskDate.getTime() > today.getTime() && task.status !== "completed";

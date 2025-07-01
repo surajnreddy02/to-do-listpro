@@ -5,12 +5,11 @@ import { TaskCard } from "@/components/TaskCard";
 import { TaskModal } from "@/components/TaskModal";
 import SmartTaskInput from "@/components/SmartTaskInput";
 import ProductivityStats from "@/components/ProductivityStats";
-import TaskCategories from "@/components/TaskCategories";
-import TaskTemplates from "@/components/TaskTemplates";
 import AchievementSystem from "@/components/AchievementSystem";
 import AdvancedTaskFilters from "@/components/AdvancedTaskFilters";
 import VoiceTaskInput from "@/components/VoiceTaskInput";
 import QuoteOfTheDay from "@/components/QuoteOfTheDay";
+import TaskOverview from "@/components/TaskOverview";
 import { Button } from "@/components/ui/button";
 import {
   Tabs,
@@ -114,25 +113,27 @@ const Dashboard = () => {
         <ProductivityStats />
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Sidebar */}
-          <div className="lg:col-span-1 space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column */}
+          <div className="space-y-4">
             <QuoteOfTheDay />
-            <TaskCategories />
             <AchievementSystem />
           </div>
 
-          {/* Main Content Area */}
-          <div className="lg:col-span-3 space-y-6">
-            {/* Input Methods */}
-            <div className="grid md:grid-cols-2 gap-4">
+          {/* Center Column */}
+          <div className="space-y-6">
+            {/* Task Input Methods */}
+            <div className="space-y-4">
               <SmartTaskInput />
               <VoiceTaskInput />
             </div>
 
-            {/* Templates */}
-            <TaskTemplates />
+            {/* Task Overview */}
+            <TaskOverview />
+          </div>
 
+          {/* Right Column */}
+          <div className="space-y-6">
             {/* Advanced Filters */}
             <div className="flex items-center gap-2">
               <Button
@@ -142,7 +143,7 @@ const Dashboard = () => {
                 className="gap-2"
               >
                 <Filter className="w-4 h-4" />
-                Advanced Filters
+                Filters
               </Button>
               {showAdvancedFilters && (
                 <Button
@@ -153,7 +154,7 @@ const Dashboard = () => {
                     setFilteredTasks([]);
                   }}
                 >
-                  Clear Filters
+                  Clear
                 </Button>
               )}
             </div>
@@ -175,14 +176,14 @@ const Dashboard = () => {
               }}
               className="space-y-4"
             >
-              <TabsList className="grid grid-cols-4 w-full max-w-md">
+              <TabsList className="grid grid-cols-4 w-full">
                 <TabsTrigger value="today" className="gap-1">
                   <CalendarDays className="h-4 w-4" />
                   <span className="hidden sm:inline">Today</span>
                 </TabsTrigger>
                 <TabsTrigger value="upcoming" className="gap-1">
                   <Filter className="h-4 w-4" />
-                  <span className="hidden sm:inline">Upcoming</span>
+                  <span className="hidden sm:inline">Soon</span>
                 </TabsTrigger>
                 <TabsTrigger value="completed" className="gap-1">
                   <CheckCircle2 className="h-4 w-4" />
@@ -195,7 +196,7 @@ const Dashboard = () => {
               </TabsList>
 
               <TabsContent value="today" className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div className="space-y-3 max-h-96 overflow-y-auto">
                   {displayTasks.length > 0 ? (
                     displayTasks.map((task) => (
                       <TaskCard
@@ -216,7 +217,7 @@ const Dashboard = () => {
               </TabsContent>
 
               <TabsContent value="upcoming" className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div className="space-y-3 max-h-96 overflow-y-auto">
                   {displayTasks.length > 0 ? (
                     displayTasks.map((task) => (
                       <TaskCard
@@ -237,7 +238,7 @@ const Dashboard = () => {
               </TabsContent>
 
               <TabsContent value="completed" className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div className="space-y-3 max-h-96 overflow-y-auto">
                   {displayTasks.length > 0 ? (
                     displayTasks.map((task) => (
                       <TaskCard
@@ -258,7 +259,7 @@ const Dashboard = () => {
               </TabsContent>
 
               <TabsContent value="all" className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div className="space-y-3 max-h-96 overflow-y-auto">
                   {displayTasks.length > 0 ? (
                     displayTasks.map((task) => (
                       <TaskCard

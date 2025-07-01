@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +18,7 @@ import EmailVerification from "@/pages/EmailVerification";
 
 // App Pages
 import Dashboard from "@/pages/Dashboard";
+import Templates from "@/pages/Templates";
 import FocusMode from "@/pages/FocusMode";
 import Calendar from "@/pages/Calendar";
 import Analytics from "@/pages/Analytics";
@@ -47,6 +49,7 @@ const App = () => (
                   <Route element={<ProtectedRoute />}>
                     <Route element={<Layout />}>
                       <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/templates" element={<Templates />} />
                       <Route path="/focus" element={<FocusMode />} />
                       <Route path="/calendar" element={<Calendar />} />
                       <Route path="/analytics" element={<Analytics />} />

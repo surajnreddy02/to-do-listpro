@@ -11,8 +11,7 @@ import {
   BarChart2,
   Settings,
   LogOut,
-  ChevronLeft,
-  ChevronRight,
+  FileText,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
@@ -36,6 +35,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
       title: "Dashboard",
       icon: LayoutDashboard,
       path: "/dashboard",
+    },
+    {
+      title: "Task Templates",
+      icon: FileText,
+      path: "/templates",
     },
     {
       title: "Focus Mode",
