@@ -5,6 +5,11 @@ import { TaskCard } from "@/components/TaskCard";
 import { TaskModal } from "@/components/TaskModal";
 import SmartTaskInput from "@/components/SmartTaskInput";
 import ProductivityStats from "@/components/ProductivityStats";
+import TaskCategories from "@/components/TaskCategories";
+import TaskTemplates from "@/components/TaskTemplates";
+import AchievementSystem from "@/components/AchievementSystem";
+import AdvancedTaskFilters from "@/components/AdvancedTaskFilters";
+import VoiceTaskInput from "@/components/VoiceTaskInput";
 import { Button } from "@/components/ui/button";
 import {
   Tabs,
@@ -24,6 +29,9 @@ import {
   CircleSlash,
   LayoutGrid,
   Sparkles,
+  Trophy,
+  Template,
+  Mic
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -34,9 +42,12 @@ const Dashboard = () => {
   const [currentFilter, setCurrentFilter] = useState<
     "today" | "upcoming" | "completed" | "all"
   >("today");
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const { toast } = useToast();
 
-  const filteredTasks = getTasksByFilter(currentFilter);
+  const baseTasks = getTasksByFilter(currentFilter);
+  const displayTasks = showAdvancedFilters ? filteredTasks : baseTasks;
 
   const handleEditTask = (task: Task) => {
     setSelectedTask(task);
@@ -83,150 +94,201 @@ const Dashboard = () => {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col justify-between space-y-4 sm:flex-row sm:items-center sm:space-y-0">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Sparkles className="w-8 h-8 text-purple-600" />
-            Smart Dashboard
-          </h1>
-          <p className="text-muted-foreground">
-            AI-powered task management and productivity insights
-          </p>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-6 space-y-6">
+        {/* Header */}
+        <div className="flex flex-col justify-between space-y-4 sm:flex-row sm:items-center sm:space-y-0">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+              <Sparkles className="w-8 h-8 text-purple-600" />
+              Smart Dashboard
+            </h1>
+            <p className="text-muted-foreground">
+              AI-powered task management and productivity insights
+            </p>
+          </div>
+          <Button onClick={handleAddTask} className="gap-1">
+            <Plus className="h-4 w-4" />
+            Add Task
+          </Button>
         </div>
-        <Button onClick={handleAddTask} className="gap-1">
-          <Plus className="h-4 w-4" />
-          Add Task
-        </Button>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Left Sidebar - Categories, Templates, Achievements */}
+          <div className="lg:col-span-1 space-y-4">
+            <TaskCategories />
+            <TaskTemplates />
+            <AchievementSystem />
+          </div>
+
+          {/* Main Content Area */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Productivity Stats */}
+            <ProductivityStats />
+
+            {/* AI-Powered Input Methods */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <SmartTaskInput />
+              <VoiceTaskInput />
+            </div>
+
+            {/* Advanced Filters */}
+            <div className="flex items-center gap-2 mb-4">
+              <Button
+                variant={showAdvancedFilters ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className="gap-2"
+              >
+                <Filter className="w-4 h-4" />
+                Advanced Filters
+              </Button>
+              {showAdvancedFilters && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowAdvancedFilters(false);
+                    setFilteredTasks([]);
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+
+            {showAdvancedFilters && (
+              <AdvancedTaskFilters onFiltersChange={setFilteredTasks} />
+            )}
+
+            {/* Task Tabs */}
+            <Tabs
+              defaultValue="today"
+              value={currentFilter}
+              onValueChange={(value) => {
+                setCurrentFilter(value as typeof currentFilter);
+                if (showAdvancedFilters) {
+                  setShowAdvancedFilters(false);
+                  setFilteredTasks([]);
+                }
+              }}
+              className="space-y-4"
+            >
+              <div className="flex justify-between">
+                <TabsList className="grid grid-cols-4 w-full max-w-md">
+                  <TabsTrigger value="today" className="gap-1">
+                    <CalendarDays className="h-4 w-4" />
+                    <span className="hidden sm:inline">Today</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="upcoming" className="gap-1">
+                    <Filter className="h-4 w-4" />
+                    <span className="hidden sm:inline">Upcoming</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="completed" className="gap-1">
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span className="hidden sm:inline">Done</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="all" className="gap-1">
+                    <LayoutGrid className="h-4 w-4" />
+                    <span className="hidden sm:inline">All</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <TabsContent value="today" className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {displayTasks.length > 0 ? (
+                    displayTasks.map((task) => (
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        onEdit={handleEditTask}
+                        onDelete={handleDeleteTask}
+                        onStatusChange={handleStatusChange}
+                      />
+                    ))
+                  ) : (
+                    <EmptyState 
+                      title="No tasks for today"
+                      description="Add a new task or set due dates to see your daily tasks"
+                    />
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="upcoming" className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {displayTasks.length > 0 ? (
+                    displayTasks.map((task) => (
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        onEdit={handleEditTask}
+                        onDelete={handleDeleteTask}
+                        onStatusChange={handleStatusChange}
+                      />
+                    ))
+                  ) : (
+                    <EmptyState 
+                      title="No upcoming tasks"
+                      description="All caught up! Add a new task if needed."
+                    />
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="completed" className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {displayTasks.length > 0 ? (
+                    displayTasks.map((task) => (
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        onEdit={handleEditTask}
+                        onDelete={handleDeleteTask}
+                        onStatusChange={handleStatusChange}
+                      />
+                    ))
+                  ) : (
+                    <EmptyState 
+                      title="No completed tasks"
+                      description="Complete some tasks to see them here"
+                    />
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="all" className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {displayTasks.length > 0 ? (
+                    displayTasks.map((task) => (
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        onEdit={handleEditTask}
+                        onDelete={handleDeleteTask}
+                        onStatusChange={handleStatusChange}
+                      />
+                    ))
+                  ) : (
+                    <EmptyState 
+                      title="No tasks found"
+                      description="Add a new task to get started"
+                    />
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+
+        <TaskModal
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          task={selectedTask}
+        />
       </div>
-
-      {/* Productivity Stats */}
-      <ProductivityStats />
-
-      {/* Smart Task Input */}
-      <SmartTaskInput />
-
-      {/* Task Tabs */}
-      <Tabs
-        defaultValue="today"
-        value={currentFilter}
-        onValueChange={(value) =>
-          setCurrentFilter(value as typeof currentFilter)
-        }
-        className="space-y-4"
-      >
-        <div className="flex justify-between">
-          <TabsList className="grid grid-cols-4 w-full max-w-md">
-            <TabsTrigger value="today" className="gap-1">
-              <CalendarDays className="h-4 w-4" />
-              <span className="hidden sm:inline">Today</span>
-            </TabsTrigger>
-            <TabsTrigger value="upcoming" className="gap-1">
-              <Filter className="h-4 w-4" />
-              <span className="hidden sm:inline">Upcoming</span>
-            </TabsTrigger>
-            <TabsTrigger value="completed" className="gap-1">
-              <CheckCircle2 className="h-4 w-4" />
-              <span className="hidden sm:inline">Done</span>
-            </TabsTrigger>
-            <TabsTrigger value="all" className="gap-1">
-              <LayoutGrid className="h-4 w-4" />
-              <span className="hidden sm:inline">All</span>
-            </TabsTrigger>
-          </TabsList>
-        </div>
-
-        <TabsContent value="today" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredTasks.length > 0 ? (
-              filteredTasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  onEdit={handleEditTask}
-                  onDelete={handleDeleteTask}
-                  onStatusChange={handleStatusChange}
-                />
-              ))
-            ) : (
-              <EmptyState 
-                title="No tasks for today"
-                description="Add a new task or set due dates to see your daily tasks"
-              />
-            )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="upcoming" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredTasks.length > 0 ? (
-              filteredTasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  onEdit={handleEditTask}
-                  onDelete={handleDeleteTask}
-                  onStatusChange={handleStatusChange}
-                />
-              ))
-            ) : (
-              <EmptyState 
-                title="No upcoming tasks"
-                description="All caught up! Add a new task if needed."
-              />
-            )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="completed" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredTasks.length > 0 ? (
-              filteredTasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  onEdit={handleEditTask}
-                  onDelete={handleDeleteTask}
-                  onStatusChange={handleStatusChange}
-                />
-              ))
-            ) : (
-              <EmptyState 
-                title="No completed tasks"
-                description="Complete some tasks to see them here"
-              />
-            )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="all" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredTasks.length > 0 ? (
-              filteredTasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  onEdit={handleEditTask}
-                  onDelete={handleDeleteTask}
-                  onStatusChange={handleStatusChange}
-                />
-              ))
-            ) : (
-              <EmptyState 
-                title="No tasks found"
-                description="Add a new task to get started"
-              />
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      <TaskModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        task={selectedTask}
-      />
     </div>
   );
 };

@@ -33,7 +33,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const demoUser = localStorage.getItem('demoUser');
     if (demoUser) {
       const demoData = JSON.parse(demoUser);
-      setUser({ id: 'demo-user-id', email: 'demo@example.com', ...demoData } as User);
+      // Create a proper User object for demo mode
+      const demoUserObj = {
+        id: 'demo-user-id',
+        email: 'demo@example.com',
+        aud: 'authenticated',
+        app_metadata: {},
+        user_metadata: { name: demoData.name },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        email_confirmed_at: new Date().toISOString(),
+        last_sign_in_at: new Date().toISOString(),
+        role: '',
+        phone: '',
+        confirmed_at: new Date().toISOString()
+      } as User;
+      
+      setUser(demoUserObj);
       setIsDemoUser(true);
       setIsLoading(false);
       return;
@@ -111,13 +127,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const loginDemo = async (name: string) => {
     const demoUserData = {
       id: 'demo-user-id',
-      email: 'demo@example.com',
-      name: name,
-      user_metadata: { name }
+      name: name
     };
 
     localStorage.setItem('demoUser', JSON.stringify(demoUserData));
-    setUser(demoUserData as User);
+    
+    const demoUserObj = {
+      id: 'demo-user-id',
+      email: 'demo@example.com',
+      aud: 'authenticated',
+      app_metadata: {},
+      user_metadata: { name },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      email_confirmed_at: new Date().toISOString(),
+      last_sign_in_at: new Date().toISOString(),
+      role: '',
+      phone: '',
+      confirmed_at: new Date().toISOString()
+    } as User;
+    
+    setUser(demoUserObj);
     setIsDemoUser(true);
 
     // Create demo tasks
