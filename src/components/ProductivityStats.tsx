@@ -1,27 +1,18 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { 
   TrendingUp, 
   Target, 
   Clock, 
   CheckCircle2, 
-  BarChart3, 
-  Sparkles,
-  Loader2
+  BarChart3
 } from "lucide-react";
 import { useTask } from "@/contexts/TaskContext";
-import { geminiService } from "@/services/geminiService";
-import { useToast } from "@/hooks/use-toast";
 
 const ProductivityStats = () => {
   const { tasks } = useTask();
-  const { toast } = useToast();
-  const [aiInsights, setAiInsights] = useState<string>("");
-  const [nextTaskSuggestion, setNextTaskSuggestion] = useState<string>("");
-  const [isLoadingInsights, setIsLoadingInsights] = useState(false);
 
   // Calculate stats
   const totalTasks = tasks.length;
@@ -53,40 +44,26 @@ const ProductivityStats = () => {
     ? Math.round(tasksWithDuration.reduce((sum, t) => sum + (t.estimatedDuration || 0), 0) / tasksWithDuration.length)
     : 0;
 
-  const generateAIInsights = async () => {
-    if (tasks.length === 0) return;
-
-    setIsLoadingInsights(true);
-    try {
-      const [insights, nextTask] = await Promise.all([
-        geminiService.generateProductivityInsights(tasks, completedTasks, totalTasks),
-        geminiService.suggestNextTask(tasks)
-      ]);
-
-      setAiInsights(insights);
-      setNextTaskSuggestion(nextTask);
-    } catch (error) {
-      toast({
-        title: "AI Insights Error",
-        description: "Could not generate insights. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingInsights(false);
-    }
-  };
-
-  useEffect(() => {
-    if (tasks.length > 0 && !aiInsights) {
-      generateAIInsights();
-    }
-  }, [tasks.length]);
-
   const getCompletionRateColor = (rate: number) => {
     if (rate >= 80) return "text-green-600 dark:text-green-400";
     if (rate >= 60) return "text-yellow-600 dark:text-yellow-400";
     return "text-red-600 dark:text-red-400";
   };
+
+  // Show empty state if no tasks
+  if (totalTasks === 0) {
+    return (
+      <Card className="col-span-full">
+        <CardContent className="flex flex-col items-center justify-center py-8">
+          <BarChart3 className="mb-2 h-10 w-10 text-muted-foreground" />
+          <p className="text-lg font-medium">No Statistics Yet</p>
+          <p className="text-sm text-muted-foreground">
+            Add some tasks to see your productivity stats
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
@@ -154,47 +131,6 @@ const ProductivityStats = () => {
           </p>
         </CardContent>
       </Card>
-
-      {/* AI Insights Card */}
-      {aiInsights && (
-        <Card className="md:col-span-2 lg:col-span-4 border-purple-200 dark:border-purple-800">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-600" />
-              AI Productivity Insights
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="bg-purple-50 dark:bg-purple-950/20 p-4 rounded-lg">
-                <p className="text-sm leading-relaxed">{aiInsights}</p>
-              </div>
-              
-              {nextTaskSuggestion && (
-                <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg">
-                  <h4 className="font-semibold text-sm mb-2">🎯 Recommended Next Task</h4>
-                  <p className="text-sm leading-relaxed">{nextTaskSuggestion}</p>
-                </div>
-              )}
-
-              <Button 
-                onClick={generateAIInsights} 
-                disabled={isLoadingInsights}
-                variant="outline" 
-                size="sm"
-                className="w-full"
-              >
-                {isLoadingInsights ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Sparkles className="w-4 h-4 mr-2" />
-                )}
-                {isLoadingInsights ? "Generating..." : "Refresh AI Insights"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Average Duration */}
       {avgDuration > 0 && (

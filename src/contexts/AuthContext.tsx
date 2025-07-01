@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -150,20 +149,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setUser(demoUserObj);
     setIsDemoUser(true);
 
-    // Create demo tasks
-    const demoTasks = [
-      { id: 'demo-1', title: 'Complete project proposal', description: 'Draft and finalize the Q1 project proposal', priority: 'high', status: 'in-progress', dueDate: '2025-01-10', createdAt: '2025-01-01' },
-      { id: 'demo-2', title: 'Review marketing materials', description: 'Go through the new marketing brochures', priority: 'medium', status: 'todo', dueDate: '2025-01-08', createdAt: '2025-01-01' },
-      { id: 'demo-3', title: 'Team meeting preparation', description: 'Prepare agenda and materials for weekly team meeting', priority: 'medium', status: 'todo', dueDate: '2025-01-07', createdAt: '2025-01-01' },
-      { id: 'demo-4', title: 'Update portfolio website', description: 'Add recent projects and update bio section', priority: 'low', status: 'todo', dueDate: null, createdAt: '2024-12-28' },
-      { id: 'demo-5', title: 'Learn React hooks', description: 'Complete advanced React hooks tutorial', priority: 'medium', status: 'completed', dueDate: '2024-12-30', createdAt: '2024-12-25' }
-    ];
-
-    localStorage.setItem('demoTasks', JSON.stringify(demoTasks));
+    // Remove dummy data - let users start fresh
+    localStorage.removeItem('demoTasks');
 
     toast({
       title: "Demo mode activated",
-      description: `Welcome ${name}! You're now in demo mode with sample data.`,
+      description: `Welcome ${name}! You're now in demo mode. Start by adding your first task!`,
     });
   };
 

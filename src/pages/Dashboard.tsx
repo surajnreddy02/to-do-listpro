@@ -10,6 +10,7 @@ import TaskTemplates from "@/components/TaskTemplates";
 import AchievementSystem from "@/components/AchievementSystem";
 import AdvancedTaskFilters from "@/components/AdvancedTaskFilters";
 import VoiceTaskInput from "@/components/VoiceTaskInput";
+import QuoteOfTheDay from "@/components/QuoteOfTheDay";
 import { Button } from "@/components/ui/button";
 import {
   Tabs,
@@ -28,10 +29,7 @@ import {
   CheckCircle2,
   CircleSlash,
   LayoutGrid,
-  Sparkles,
-  Trophy,
-  FileText,
-  Mic
+  Target
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -61,7 +59,6 @@ const Dashboard = () => {
   const handleStatusChange = (id: string, status: Task["status"]) => {
     updateTask(id, { status });
 
-    // Show toast notification
     const statusMessages = {
       todo: "Task marked as To Do",
       "in-progress": "Task marked as In Progress",
@@ -100,11 +97,11 @@ const Dashboard = () => {
         <div className="flex flex-col justify-between space-y-4 sm:flex-row sm:items-center sm:space-y-0">
           <div>
             <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-              <Sparkles className="w-8 h-8 text-purple-600" />
-              Smart Dashboard
+              <Target className="w-8 h-8 text-primary" />
+              Dashboard
             </h1>
             <p className="text-muted-foreground">
-              AI-powered task management and productivity insights
+              Manage your tasks and track your productivity
             </p>
           </div>
           <Button onClick={handleAddTask} className="gap-1">
@@ -113,28 +110,31 @@ const Dashboard = () => {
           </Button>
         </div>
 
+        {/* Stats Section */}
+        <ProductivityStats />
+
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Sidebar - Categories, Templates, Achievements */}
+          {/* Left Sidebar */}
           <div className="lg:col-span-1 space-y-4">
+            <QuoteOfTheDay />
             <TaskCategories />
-            <TaskTemplates />
             <AchievementSystem />
           </div>
 
           {/* Main Content Area */}
           <div className="lg:col-span-3 space-y-6">
-            {/* Productivity Stats */}
-            <ProductivityStats />
-
-            {/* AI-Powered Input Methods */}
+            {/* Input Methods */}
             <div className="grid md:grid-cols-2 gap-4">
               <SmartTaskInput />
               <VoiceTaskInput />
             </div>
 
+            {/* Templates */}
+            <TaskTemplates />
+
             {/* Advanced Filters */}
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2">
               <Button
                 variant={showAdvancedFilters ? "default" : "outline"}
                 size="sm"
@@ -175,26 +175,24 @@ const Dashboard = () => {
               }}
               className="space-y-4"
             >
-              <div className="flex justify-between">
-                <TabsList className="grid grid-cols-4 w-full max-w-md">
-                  <TabsTrigger value="today" className="gap-1">
-                    <CalendarDays className="h-4 w-4" />
-                    <span className="hidden sm:inline">Today</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="upcoming" className="gap-1">
-                    <Filter className="h-4 w-4" />
-                    <span className="hidden sm:inline">Upcoming</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="completed" className="gap-1">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span className="hidden sm:inline">Done</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="all" className="gap-1">
-                    <LayoutGrid className="h-4 w-4" />
-                    <span className="hidden sm:inline">All</span>
-                  </TabsTrigger>
-                </TabsList>
-              </div>
+              <TabsList className="grid grid-cols-4 w-full max-w-md">
+                <TabsTrigger value="today" className="gap-1">
+                  <CalendarDays className="h-4 w-4" />
+                  <span className="hidden sm:inline">Today</span>
+                </TabsTrigger>
+                <TabsTrigger value="upcoming" className="gap-1">
+                  <Filter className="h-4 w-4" />
+                  <span className="hidden sm:inline">Upcoming</span>
+                </TabsTrigger>
+                <TabsTrigger value="completed" className="gap-1">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span className="hidden sm:inline">Done</span>
+                </TabsTrigger>
+                <TabsTrigger value="all" className="gap-1">
+                  <LayoutGrid className="h-4 w-4" />
+                  <span className="hidden sm:inline">All</span>
+                </TabsTrigger>
+              </TabsList>
 
               <TabsContent value="today" className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
