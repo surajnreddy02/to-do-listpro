@@ -67,17 +67,17 @@ const TaskOverview = () => {
               className="group cursor-pointer transition-all duration-200 hover:scale-105"
               onClick={item.onClick}
             >
-              <div className="flex items-center justify-between p-4 rounded-lg border hover:border-primary/50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-full ${item.bgColor}`}>
+              <div className="flex items-center justify-between p-4 rounded-lg border hover:border-primary/50 transition-colors min-h-[80px]">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className={`p-2 rounded-full flex-shrink-0 ${item.bgColor}`}>
                     <item.icon className={`w-5 h-5 ${item.color}`} />
                   </div>
-                  <div>
-                    <p className="font-semibold text-lg">{item.count}</p>
-                    <p className="text-sm text-muted-foreground">{item.title}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-lg leading-tight">{item.count}</p>
+                    <p className="text-sm text-muted-foreground truncate">{item.title}</p>
                   </div>
                 </div>
-                <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0 ml-2" />
               </div>
             </div>
           ))}
@@ -91,14 +91,17 @@ const TaskOverview = () => {
             </h4>
             <div className="space-y-2">
               {todayTasks.slice(0, 3).map((task) => (
-                <div key={task.id} className="flex items-center justify-between p-2 rounded border">
-                  <div className="flex items-center gap-2">
-                    <Badge variant={task.priority === 'high' ? 'destructive' : task.priority === 'medium' ? 'default' : 'secondary'}>
+                <div key={task.id} className="flex items-center justify-between p-2 rounded border gap-2">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <Badge 
+                      variant={task.priority === 'high' ? 'destructive' : task.priority === 'medium' ? 'default' : 'secondary'}
+                      className="flex-shrink-0"
+                    >
                       {task.priority}
                     </Badge>
-                    <span className="text-sm font-medium truncate">{task.title}</span>
+                    <span className="text-sm font-medium truncate flex-1 min-w-0">{task.title}</span>
                   </div>
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-xs flex-shrink-0">
                     {task.status}
                   </Badge>
                 </div>
