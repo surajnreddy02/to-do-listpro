@@ -15,6 +15,7 @@ import {
   LogOut,
   FileText,
   Menu,
+  CheckSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -69,10 +70,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
       <div className="flex h-16 items-center justify-center px-4">
         <Link
           to="/dashboard"
-          className="flex flex-col items-center gap-1 font-semibold text-lg text-primary"
+          className="flex flex-col items-center gap-1 text-center hover:scale-105 transition-transform duration-200"
           onClick={() => setIsOpen(false)}
         >
-          <span>To-Do Pro+</span>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center">
+              <CheckSquare className="w-4 h-4 text-primary-foreground" />
+            </div>
+            <span className="font-bold text-lg bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+              To-Do Pro+
+            </span>
+          </div>
           <span className="text-xs text-muted-foreground/70 font-normal">
             by Nani
           </span>

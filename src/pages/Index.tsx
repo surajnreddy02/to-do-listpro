@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, Calendar, BarChart3, Target, Sparkles, ArrowRight } from "lucide-react";
+import { CheckCircle, Calendar, BarChart3, Target, Sparkles, ArrowRight, CheckSquare } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Index = () => {
@@ -60,9 +60,14 @@ const Index = () => {
         {/* Hero Section */}
         <div className="text-center space-y-8 mb-16">
           <div className="space-y-4">
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-              To-Do Pro<span className="text-primary">+</span>
-            </h1>
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center">
+                <CheckSquare className="w-8 h-8 text-primary-foreground" />
+              </div>
+              <h1 className="text-4xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+                To-Do Pro<span className="text-primary">+</span>
+              </h1>
+            </div>
             <p className="text-sm text-muted-foreground/70 mt-1">
               Developed by Suraj N Reddy
             </p>
