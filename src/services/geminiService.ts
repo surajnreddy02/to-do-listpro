@@ -183,6 +183,75 @@ export class GeminiService {
       return ['Work', 'Personal', 'Health', 'Learning'];
     }
   }
+
+  async generateTaskTemplate(description: string): Promise<any> {
+    const prompt = `Create a task template based on this description: "${description}"
+
+    Please analyze this and create a structured task template with:
+    1. A short template name (2-4 words)
+    2. A clear task title
+    3. A detailed description of what needs to be done
+    4. Appropriate priority level (low, medium, high)
+    5. Suggested timing/scheduling context (daily, weekly, weekend, specific day, etc.)
+
+    Return a JSON object with this structure:
+    {
+      "name": "Template Name",
+      "title": "Task Title",
+      "description": "Detailed task description",
+      "priority": "medium",
+      "schedulingContext": "daily|weekly|weekend|today|tomorrow|specific",
+      "explanation": "Brief explanation of when this task should typically be scheduled"
+    }
+
+    Make the template reusable and professional.`;
+
+    const response = await this.makeRequest(prompt);
+    try {
+      // Extract JSON from response if it's wrapped in markdown
+      const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/) || response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[1] || jsonMatch[0]);
+      }
+      return JSON.parse(response);
+    } catch (error) {
+      console.error('Error generating task template:', error);
+      throw new Error('Failed to generate task template');
+    }
+  }
+
+  async analyzeTemplateScheduling(template: any): Promise<any> {
+    const prompt = `Analyze this task template and determine when it should be scheduled: "${JSON.stringify(template)}"
+
+    Based on the template name, title, and description, determine the most appropriate scheduling:
+    
+    Return a JSON object with:
+    {
+      "suggestedDay": "today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|next_week|weekend",
+      "reasoning": "Brief explanation of why this timing makes sense",
+      "timeOfDay": "morning|afternoon|evening|any",
+      "urgency": "immediate|today|this_week|next_week|flexible"
+    }
+
+    Consider:
+    - Daily standup/meeting tasks should be scheduled for today or tomorrow
+    - Weekly reports should be scheduled for appropriate weekdays
+    - Weekend activities should be scheduled for weekends
+    - Follow-ups should be scheduled promptly
+    - Documentation can be more flexible`;
+
+    const response = await this.makeRequest(prompt);
+    try {
+      const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/) || response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[1] || jsonMatch[0]);
+      }
+      return JSON.parse(response);
+    } catch (error) {
+      console.error('Error analyzing template scheduling:', error);
+      throw new Error('Failed to analyze template scheduling');
+    }
+  }
 }
 
 export const geminiService = new GeminiService();
