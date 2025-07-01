@@ -28,70 +28,9 @@ const EnhancedAchievementSystem = () => {
   const isMobile = useIsMobile();
   const [achievements, setAchievements] = useState<Achievement[]>([]);
 
-  const achievementDefinitions = [
-    {
-      id: 'first-task',
-      title: 'Getting Started',
-      description: 'Create your first task',
-      type: 'milestone',
-      points: 10,
-      maxProgress: 1,
-      icon: Target,
-      checker: (tasks: any[]) => tasks.length >= 1
-    },
-    {
-      id: 'task-master',
-      title: 'Task Master',
-      description: 'Create 10 tasks',
-      type: 'milestone',
-      points: 50,
-      maxProgress: 10,
-      icon: Star,
-      checker: (tasks: any[]) => tasks.length >= 10
-    },
-    {
-      id: 'completion-champion',
-      title: 'Completion Champion',
-      description: 'Complete 5 tasks',
-      type: 'completion',
-      points: 30,
-      maxProgress: 5,
-      icon: CheckCircle,
-      checker: (tasks: any[]) => tasks.filter(t => t.status === 'completed').length >= 5
-    },
-    {
-      id: 'weekly-warrior',
-      title: 'Weekly Warrior',
-      description: 'Complete 20 tasks',
-      type: 'completion',
-      points: 100,
-      maxProgress: 20,
-      icon: Trophy,
-      checker: (tasks: any[]) => tasks.filter(t => t.status === 'completed').length >= 20
-    },
-    {
-      id: 'priority-pro',
-      title: 'Priority Pro',
-      description: 'Complete 3 high-priority tasks',
-      type: 'priority',
-      points: 40,
-      maxProgress: 3,
-      icon: Zap,
-      checker: (tasks: any[]) => tasks.filter(t => t.status === 'completed' && t.priority === 'high').length >= 3
-    },
-    {
-      id: 'consistency-king',
-      title: 'Consistency King',
-      description: 'Create tasks for 7 consecutive days',
-      type: 'streak',
-      points: 75,
-      maxProgress: 7,
-      icon: Calendar,
-      checker: (tasks: any[]) => calculateConsecutiveDays(tasks) >= 7
-    }
-  ];
-
   const calculateConsecutiveDays = (tasks: any[]) => {
+    if (tasks.length === 0) return 0;
+    
     const dates = [...new Set(tasks.map(t => new Date(t.createdAt).toDateString()))].sort();
     let maxStreak = 0;
     let currentStreak = 1;
@@ -112,6 +51,75 @@ const EnhancedAchievementSystem = () => {
     return Math.max(maxStreak, currentStreak);
   };
 
+  const achievementDefinitions = [
+    {
+      id: 'first-task',
+      title: 'Getting Started',
+      description: 'Create your first task',
+      type: 'milestone',
+      points: 10,
+      maxProgress: 1,
+      icon: Target,
+      getProgress: (tasks: any[]) => tasks.length,
+      isEarned: (tasks: any[]) => tasks.length >= 1
+    },
+    {
+      id: 'task-master',
+      title: 'Task Master',
+      description: 'Create 10 tasks',
+      type: 'milestone',
+      points: 50,
+      maxProgress: 10,
+      icon: Star,
+      getProgress: (tasks: any[]) => tasks.length,
+      isEarned: (tasks: any[]) => tasks.length >= 10
+    },
+    {
+      id: 'completion-champion',
+      title: 'Completion Champion',
+      description: 'Complete 5 tasks',
+      type: 'completion',
+      points: 30,
+      maxProgress: 5,
+      icon: CheckCircle,
+      getProgress: (tasks: any[]) => tasks.filter(t => t.status === 'completed').length,
+      isEarned: (tasks: any[]) => tasks.filter(t => t.status === 'completed').length >= 5
+    },
+    {
+      id: 'weekly-warrior',
+      title: 'Weekly Warrior',
+      description: 'Complete 20 tasks',
+      type: 'completion',
+      points: 100,
+      maxProgress: 20,
+      icon: Trophy,
+      getProgress: (tasks: any[]) => tasks.filter(t => t.status === 'completed').length,
+      isEarned: (tasks: any[]) => tasks.filter(t => t.status === 'completed').length >= 20
+    },
+    {
+      id: 'priority-pro',
+      title: 'Priority Pro',
+      description: 'Complete 3 high-priority tasks',
+      type: 'priority',
+      points: 40,
+      maxProgress: 3,
+      icon: Zap,
+      getProgress: (tasks: any[]) => tasks.filter(t => t.status === 'completed' && t.priority === 'high').length,
+      isEarned: (tasks: any[]) => tasks.filter(t => t.status === 'completed' && t.priority === 'high').length >= 3
+    },
+    {
+      id: 'consistency-king',
+      title: 'Consistency King',
+      description: 'Create tasks for 7 consecutive days',
+      type: 'streak',
+      points: 75,
+      maxProgress: 7,
+      icon: Calendar,
+      getProgress: (tasks: any[]) => calculateConsecutiveDays(tasks),
+      isEarned: (tasks: any[]) => calculateConsecutiveDays(tasks) >= 7
+    }
+  ];
+
   const saveAchievement = async (achievement: Achievement) => {
     if (isDemoUser) return;
 
@@ -130,25 +138,8 @@ const EnhancedAchievementSystem = () => {
 
   useEffect(() => {
     const updatedAchievements = achievementDefinitions.map(def => {
-      const progress = Math.min(
-        def.checker === calculateConsecutiveDays 
-          ? def.checker(tasks)
-          : (() => {
-              if (def.id === 'first-task' || def.id === 'task-master') {
-                return tasks.length;
-              }
-              if (def.id === 'completion-champion' || def.id === 'weekly-warrior') {
-                return tasks.filter(t => t.status === 'completed').length;
-              }
-              if (def.id === 'priority-pro') {
-                return tasks.filter(t => t.status === 'completed' && t.priority === 'high').length;
-              }
-              return 0;
-            })(),
-        def.maxProgress
-      );
-      
-      const earned = def.checker(tasks);
+      const progress = Math.min(def.getProgress(tasks), def.maxProgress);
+      const earned = def.isEarned(tasks);
       
       return {
         ...def,
