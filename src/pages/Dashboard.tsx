@@ -30,7 +30,7 @@ import {
   LayoutGrid,
   Sparkles,
   Trophy,
-  Template,
+  FileText,
   Mic
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Template, Trash2 } from "lucide-react";
+import { Plus, FileText, Trash2 } from "lucide-react";
 import { useTask } from "@/contexts/TaskContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -38,11 +38,17 @@ const TaskTemplates = () => {
     }
   ]);
   const [isCreating, setIsCreating] = useState(false);
-  const [newTemplate, setNewTemplate] = useState({
+  const [newTemplate, setNewTemplate] = useState<{
+    name: string;
+    title: string;
+    description: string;
+    priority: 'low' | 'medium' | 'high';
+    categoryId: string;
+  }>({
     name: '',
     title: '',
     description: '',
-    priority: 'medium' as const,
+    priority: 'medium',
     categoryId: ''
   });
   const { toast } = useToast();
@@ -100,7 +106,7 @@ const TaskTemplates = () => {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Template className="w-5 h-5" />
+            <FileText className="w-5 h-5" />
             Task Templates
           </div>
           <Button
