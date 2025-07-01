@@ -69,10 +69,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
       <div className="flex h-16 items-center justify-center px-4">
         <Link
           to="/dashboard"
-          className="flex items-center gap-2 font-semibold text-lg text-primary"
+          className="flex flex-col items-center gap-1 font-semibold text-lg text-primary"
           onClick={() => setIsOpen(false)}
         >
-          To-Do Pro+
+          <span>To-Do Pro+</span>
+          <span className="text-xs text-muted-foreground/70 font-normal">
+            by Nani
+          </span>
         </Link>
       </div>
 

@@ -63,6 +63,9 @@ const Index = () => {
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
               To-Do Pro<span className="text-primary">+</span>
             </h1>
+            <p className="text-sm text-muted-foreground/70 mt-1">
+              Developed by Suraj N Reddy
+            </p>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Transform your productivity with our intelligent task management system. 
               Organize, prioritize, and achieve your goals with ease.
