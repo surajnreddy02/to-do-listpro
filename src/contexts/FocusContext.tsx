@@ -1,5 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface FocusSession {
   id: string;
@@ -40,6 +42,7 @@ const FocusContext = createContext<FocusContextType | undefined>(undefined);
 export const FocusProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const { user } = useAuth();
   // Timer state
   const [isActive, setIsActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -54,23 +57,53 @@ export const FocusProvider: React.FC<{ children: React.ReactNode }> = ({
   const [sessions, setSessions] = useState<FocusSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   
-  // Load sessions from localStorage on mount
+  // Load sessions from Supabase on mount
   useEffect(() => {
-    const storedSessions = localStorage.getItem("todoProFocusSessions");
-    if (storedSessions) {
-      try {
-        setSessions(JSON.parse(storedSessions));
-      } catch (error) {
-        console.error("Failed to parse stored sessions", error);
-        localStorage.removeItem("todoProFocusSessions");
+    const loadSessions = async () => {
+      if (!user) return;
+      
+      const { data, error } = await supabase
+        .from('focus_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error("Failed to load focus sessions", error);
+        return;
       }
-    }
-  }, []);
+      
+      const formattedSessions = data.map(session => ({
+        id: session.id,
+        date: session.start_time,
+        duration: session.duration,
+        completed: !!session.end_time,
+      }));
+      
+      setSessions(formattedSessions);
+    };
+    
+    loadSessions();
+  }, [user]);
   
-  // Save sessions to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem("todoProFocusSessions", JSON.stringify(sessions));
-  }, [sessions]);
+  // Save completed session to Supabase
+  const saveSessionToSupabase = async (sessionData: FocusSession) => {
+    if (!user) return;
+    
+    const { error } = await supabase
+      .from('focus_sessions')
+      .insert({
+        id: sessionData.id,
+        user_id: user.id,
+        start_time: sessionData.date,
+        duration: sessionData.duration,
+        end_time: sessionData.completed ? new Date().toISOString() : null,
+      });
+    
+    if (error) {
+      console.error("Failed to save focus session", error);
+    }
+  };
   
   // Timer effect
   useEffect(() => {
@@ -86,13 +119,22 @@ export const FocusProvider: React.FC<{ children: React.ReactNode }> = ({
             
             // If focus mode is finished, add to completed sessions
             if (mode === "focus" && currentSessionId) {
+              const updatedSession = {
+                id: currentSessionId,
+                date: new Date().toISOString(),
+                duration: focusDuration,
+                completed: true,
+              };
+              
               setSessions((prev) =>
                 prev.map((session) =>
                   session.id === currentSessionId
-                    ? { ...session, completed: true }
+                    ? updatedSession
                     : session
                 )
               );
+              
+              saveSessionToSupabase(updatedSession);
               setCurrentSessionId(null);
             }
             
@@ -160,13 +202,22 @@ export const FocusProvider: React.FC<{ children: React.ReactNode }> = ({
   const skipToBreak = () => {
     if (mode === "focus" && currentSessionId) {
       // Mark the current session as completed when skipping to break
+      const updatedSession = {
+        id: currentSessionId,
+        date: new Date().toISOString(),
+        duration: focusDuration - timeRemaining,
+        completed: true,
+      };
+      
       setSessions((prev) =>
         prev.map((session) =>
           session.id === currentSessionId
-            ? { ...session, completed: true, duration: focusDuration - timeRemaining }
+            ? updatedSession
             : session
         )
       );
+      
+      saveSessionToSupabase(updatedSession);
       setCurrentSessionId(null);
     }
     
