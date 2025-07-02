@@ -74,13 +74,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
           onClick={() => setIsOpen(false)}
         >
           <div className="flex items-center gap-2">
-            <div className="relative w-10 h-10 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 rounded-xl opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
-              <CheckSquare className="w-5 h-5 text-white relative z-10" />
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-yellow-600 rounded-xl flex items-center justify-center shadow-lg">
+              <CheckSquare className="w-5 h-5 text-primary-foreground" />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-lg bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                To-Do Pro<span className="text-purple-600">+</span>
+              <span className="font-bold text-lg bg-gradient-to-r from-primary to-yellow-600 bg-clip-text text-transparent">
+                To-Do Pro<span className="text-primary">+</span>
               </span>
             </div>
           </div>

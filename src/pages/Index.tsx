@@ -61,12 +61,11 @@ const Index = () => {
         <div className="text-center space-y-8 mb-16">
           <div className="space-y-4">
             <div className="flex items-center justify-center gap-4 mb-4">
-              <div className="relative w-20 h-20 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center shadow-2xl">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 rounded-3xl opacity-0 hover:opacity-100 transition-opacity duration-500 animate-pulse"></div>
-                <CheckSquare className="w-10 h-10 text-white relative z-10" />
+              <div className="w-20 h-20 bg-gradient-to-br from-primary to-yellow-600 rounded-3xl flex items-center justify-center shadow-2xl">
+                <CheckSquare className="w-10 h-10 text-primary-foreground" />
               </div>
-              <h1 className="text-4xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                To-Do Pro<span className="text-purple-600">+</span>
+              <h1 className="text-4xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-primary to-yellow-600 bg-clip-text text-transparent">
+                To-Do Pro<span className="text-primary">+</span>
               </h1>
             </div>
             <p className="text-sm text-muted-foreground/70 mt-1">
